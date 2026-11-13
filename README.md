@@ -7,6 +7,9 @@ Ce dossier est le livrable de l'**Objectif 3** : les maquettes de l'Objectif 2 d
 avec un frontend complet et un **backend minimal** qui gère les comptes, le catalogue et le panier à partir d'une
 vraie base de données.
 
+> **Lancer le site :** suivre le [guide d'installation](#5-installation-et-lancement), pas à pas, d'un ordinateur
+> sans aucun outil installé jusqu'au site ouvert dans le navigateur.
+
 ---
 
 ## Sommaire
@@ -145,64 +148,172 @@ Objectif3/
 
 ## 5. Installation et lancement
 
-Le site fonctionne sur Windows, macOS et Linux.
+Ce guide part d'un ordinateur sur lequel rien n'est installé et va jusqu'au site ouvert dans le navigateur. Il
+fonctionne sous Windows, macOS et Linux. Compter environ 20 minutes la première fois (installations comprises),
+puis quelques secondes pour relancer le site les fois suivantes.
 
-### Prérequis
+**Vue d'ensemble :** installer Node.js et PostgreSQL → créer une base vide → configurer et lancer l'API (terminal 1)
+→ lancer le site (terminal 2) → ouvrir http://localhost:4200.
 
-| Outil           | Version                                | Lien                                 |
-| --------------- | -------------------------------------- | ------------------------------------ |
-| Node.js (+ npm) | 22 LTS ou plus récent                  | https://nodejs.org                   |
-| PostgreSQL      | 16 ou plus récent                      | https://www.postgresql.org/download/ |
-| Navigateur      | Chrome, Firefox, Edge ou Safari récent |                                      |
+### Étape 0 — Installer les outils (une seule fois)
 
-Aucun outil à installer globalement : Angular CLI, NestJS CLI et Prisma sont installés dans chaque projet par
-`npm install`. Vérifier les versions : `node -v` et `npm -v`.
+| Outil                | Version                                          | Téléchargement                       |
+| -------------------- | ------------------------------------------------ | ------------------------------------ |
+| **Node.js** (+ npm)  | **24 LTS** recommandé (ou 22.22 et plus, ou 26+) | https://nodejs.org                   |
+| **PostgreSQL**       | 16 ou plus récent                                | https://www.postgresql.org/download/ |
+| Navigateur           | Chrome, Firefox, Edge ou Safari récent           |                                      |
+| Éditeur (facultatif) | Visual Studio Code, ou le Bloc-notes             | https://code.visualstudio.com        |
 
-### Étape 1 — Créer la base de données
+**Node.js** — Télécharger la version « LTS » et l'installer avec les options par défaut. Les versions impaires
+(23, 25) ne sont pas prises en charge par Angular.
 
-Créer une base vide nommée `bytebazaar`, avec pgAdmin, ou en ligne de commande :
+**PostgreSQL** — Lancer l'installateur et garder les options par défaut :
+
+- composants : PostgreSQL Server, **pgAdmin 4** et Command Line Tools ;
+- **mot de passe du super-utilisateur `postgres`** : le choisir et **le noter**, il servira aux étapes 2 et 3 ;
+- port : **5432** ;
+- Stack Builder, proposé à la fin : inutile, on peut le fermer.
+
+**Vérification** — Ouvrir un **nouveau** terminal, pour qu'il prenne en compte les installations : sous Windows,
+menu Démarrer → « PowerShell » ; sous macOS, l'application « Terminal ». Puis taper :
 
 ```bash
-psql -U postgres -c "CREATE DATABASE bytebazaar;"
+node -v      # doit afficher v22.22 ou plus, par exemple v24.15.0
+npm -v       # doit afficher un numéro de version, par exemple 11.6.2
 ```
 
-### Étape 2 — Configurer et lancer l'API
+Aucun autre outil n'est à installer : Angular, NestJS et Prisma sont installés automatiquement dans le projet par
+`npm install` (étapes 3 et 4).
+
+### Étape 1 — Récupérer le projet
+
+- **Depuis le fichier zip** : clic droit sur `Groupe1_Projet_Web_Objectif3.zip` → « Extraire tout… » → « Extraire ».
+  Le dossier extrait contient un dossier `Objectif3`, qui contient lui-même `README.md`, `backend` et `frontend`.
+- **Depuis GitHub** : `git clone https://github.com/Ahmed-El-Behi/ByteBazaar_Objectif3.git`. Dans la suite, le
+  dossier `ByteBazaar_Objectif3` joue le rôle du dossier `Objectif3`.
+
+Ensuite, dans le terminal, se placer dans ce dossier. Le plus simple : taper `cd ` (avec l'espace), faire glisser le
+dossier `Objectif3` dans la fenêtre du terminal, puis appuyer sur Entrée.
+
+### Étape 2 — Créer la base de données
+
+Créer une base vide nommée `bytebazaar`. Les tables et les produits y seront ajoutés à l'étape 3. Deux méthodes, au
+choix.
+
+**Méthode A — pgAdmin (sans ligne de commande)**
+
+1. Ouvrir **pgAdmin 4**, installé avec PostgreSQL.
+2. Dans le panneau de gauche, déplier **Servers** → **PostgreSQL** et saisir le mot de passe `postgres` choisi à
+   l'étape 0.
+3. Clic droit sur **Databases** → **Create** → **Database…**
+4. Dans **Database**, taper `bytebazaar`, puis cliquer sur **Save**.
+
+**Méthode B — ligne de commande**
+
+Sous **Windows (PowerShell)**, `psql` n'est en général pas reconnu tel quel : il faut l'appeler par son chemin
+complet. Remplacer `18` par le numéro de la version installée (voir le dossier `C:\Program Files\PostgreSQL`).
+
+```powershell
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -c "CREATE DATABASE bytebazaar;"
+```
+
+Sous **macOS / Linux** :
+
+```bash
+psql -U postgres -c "CREATE DATABASE bytebazaar;"       # Linux, si refusé : sudo -u postgres psql -c "…"
+```
+
+Le mot de passe `postgres` est demandé ; les caractères ne s'affichent pas pendant la saisie, c'est normal. La
+réponse attendue est `CREATE DATABASE`.
+
+### Étape 3 — Configurer et lancer l'API (terminal 1)
+
+**3.1 — Installer les dépendances**, depuis le dossier `Objectif3` :
 
 ```bash
 cd backend
-npm install                                             # installe les dépendances et génère le client Prisma
+npm install          # 1 à 2 minutes ; installe les dépendances et génère le client Prisma
 ```
 
-Copier `.env.example` en `.env` (`cp .env.example .env`, ou `copy .env.example .env` sous Windows), puis
-renseigner :
+Des lignes `npm warn` peuvent s'afficher : elles sont sans conséquence.
 
-- `DATABASE_URL` : remplacer `motdepasse` par le mot de passe de l'utilisateur `postgres` (et le nom de la base si
-  besoin) ;
-- `JWT_SECRET` : une longue chaîne aléatoire, par exemple le résultat de
-  `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
-
-Puis :
+**3.2 — Créer le fichier de configuration `.env`** à partir du modèle fourni :
 
 ```bash
-npx prisma migrate deploy --config prisma7.config.ts   # crée les tables
-npm run seed                                            # importe les 3 891 produits (≈ 1 à 2 min)
-npm run start:dev                                       # API sur http://localhost:3000
+copy .env.example .env      # Windows (PowerShell ou Invite de commandes)
+cp .env.example .env        # macOS / Linux
 ```
 
-Contrôle : http://localhost:3000/health doit afficher `{"status":"ok","database":"connected"}`.
+Générer une clé secrète pour les sessions, puis copier la longue suite de caractères affichée :
 
-### Étape 3 — Lancer le site (dans un second terminal)
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Ouvrir le fichier `.env` (`notepad .env` sous Windows, `open -e .env` sous macOS, ou avec VS Code) et modifier deux
+lignes :
+
+```ini
+DATABASE_URL="postgresql://postgres:VOTRE_MOT_DE_PASSE@localhost:5432/bytebazaar?schema=public"
+JWT_SECRET="la-longue-suite-de-caracteres-generee-ci-dessus"
+```
+
+- `VOTRE_MOT_DE_PASSE` : le mot de passe `postgres` choisi à l'étape 0. S'il contient des caractères spéciaux,
+  les remplacer par leur code : `@` → `%40`, `#` → `%23`, `:` → `%3A`, `/` → `%2F`, `%` → `%25`.
+- Si PostgreSQL utilise un autre port que 5432, modifier aussi `5432`.
+- Les autres lignes (`FRONTEND_URL`, `PORT`, `TRUST_PROXY`) n'ont pas à être modifiées.
+
+Enregistrer et fermer le fichier.
+
+**3.3 — Créer les tables et importer le catalogue :**
+
+```bash
+npx prisma migrate deploy --config prisma7.config.ts    # crée les tables ; affiche « successfully applied »
+npm run seed                                             # importe les 3 891 produits (1 à 2 minutes)
+```
+
+L'import se termine par `En base : 15 catégories, 171 marques, 3891 produits (3891 actifs)`.
+
+**3.4 — Lancer l'API :**
+
+```bash
+npm run start:dev
+```
+
+L'API est prête quand la ligne `Nest application successfully started` s'affiche. **Laisser ce terminal ouvert.**
+
+Vérification : ouvrir http://localhost:3000/health dans le navigateur ; la page doit afficher
+`{"status":"ok","database":"connected"}`.
+
+### Étape 4 — Lancer le site (terminal 2)
+
+Ouvrir un **second** terminal, se placer à nouveau dans le dossier `Objectif3` (comme à l'étape 1), puis :
 
 ```bash
 cd frontend
-npm install
-npm start                                               # site sur http://localhost:4200
+npm install          # 1 à 2 minutes
+npm start
 ```
 
-Ouvrir **http://localhost:4200**. Pendant le développement, le site relaie automatiquement les appels `/api/…`
-vers l'API du port 3000 (`proxy.conf.json`) : il n'y a rien d'autre à configurer.
+Le site est prêt quand la ligne `➜  Local:   http://localhost:4200/` s'affiche. Si Angular demande s'il peut collecter
+des statistiques d'utilisation anonymes, répondre `N` puis Entrée. **Laisser ce terminal ouvert lui aussi.**
 
-> Les deux terminaux (API et site) doivent rester ouverts pendant l'utilisation.
+### Étape 5 — Ouvrir le site
+
+Ouvrir **http://localhost:4200** dans le navigateur. L'accueil affiche trois produits vedettes et les catégories ; le
+catalogue contient les 3 891 produits. Le [manuel d'utilisation](#6-manuel-dutilisation) décrit ce qu'on peut y
+faire.
+
+Le site relaie automatiquement ses appels `/api/…` vers l'API du port 3000 (`frontend/proxy.conf.json`) : il n'y a
+rien d'autre à configurer.
+
+### Arrêter et relancer
+
+- **Arrêter** : dans chacun des deux terminaux, appuyer sur `Ctrl + C`.
+- **Relancer plus tard** : les étapes 0 à 3.3 ne sont à faire qu'une fois. Il suffit ensuite de lancer
+  `npm run start:dev` dans `backend` (terminal 1), puis `npm start` dans `frontend` (terminal 2).
+- **Repartir d'une base neuve** (facultatif) : supprimer la base `bytebazaar` dans pgAdmin, puis refaire l'étape 2
+  et l'étape 3.3.
 
 ---
 
@@ -279,13 +390,18 @@ npm run build            # build de production dans dist/frontend/browser
 
 ## 9. Dépannage
 
-| Problème                                                       | Solution                                                                                                                                                     |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `JWT_SECRET manquant` au démarrage de l'API                    | Le fichier `backend/.env` n'existe pas ou `JWT_SECRET` est vide (étape 2).                                                                                   |
-| `/health` indique une erreur de base, ou `npm run seed` échoue | Vérifier que PostgreSQL est démarré et que `DATABASE_URL` (mot de passe, port, nom de la base) est correct.                                                  |
-| Le site s'affiche mais sans produits                           | L'API n'est pas lancée, ou `npm run seed` n'a pas été exécuté.                                                                                               |
-| `Port 3000 / 4200 is already in use`                           | Fermer l'autre programme, ou changer de port : `PORT=3001` dans `.env` (et la cible de `frontend/proxy.conf.json`), `npm start -- --port 4300` pour le site. |
-| « Trop de tentatives » à la connexion                          | Protection contre le forçage : attendre 15 minutes, ou redémarrer l'API en développement.                                                                    |
+| Problème                                                                                                | Solution                                                                                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `node`, `npm` ou `psql` « n'est pas reconnu » (_is not recognized_)                                     | Fermer et rouvrir le terminal après l'installation. Pour `psql` sous Windows, utiliser le chemin complet (étape 2, méthode B) ou pgAdmin (méthode A).                                                                      |
+| PowerShell : « l'exécution de scripts est désactivée » (_running scripts is disabled_) en lançant `npm` | Utiliser l'**Invite de commandes** (`cmd`) au lieu de PowerShell : les commandes `npm` y sont identiques. Ou taper `npm.cmd` à la place de `npm`.                                                                          |
+| `npm install` : _Unsupported engine_ ou erreur sur la version de Node                                   | Installer Node.js 24 LTS (étape 0), puis rouvrir le terminal.                                                                                                                                                              |
+| `password authentication failed for user "postgres"`                                                    | Mauvais mot de passe dans `DATABASE_URL` (fichier `backend/.env`). Vérifier aussi les caractères spéciaux à remplacer (étape 3.2).                                                                                         |
+| `database "bytebazaar" does not exist`                                                                  | La base n'a pas été créée : refaire l'étape 2.                                                                                                                                                                             |
+| `Can't reach database server at localhost:5432` (_ECONNREFUSED_)                                        | PostgreSQL n'est pas démarré, ou utilise un autre port. Windows : touche Windows → « Services » → démarrer le service `postgresql-x64-…`. Vérifier le port dans `DATABASE_URL`.                                            |
+| `JWT_SECRET manquant` au démarrage de l'API                                                             | Le fichier `backend/.env` n'existe pas, est enregistré sous un autre nom (`.env.txt` avec le Bloc-notes), ou `JWT_SECRET` est vide (étape 3.2).                                                                            |
+| Le site s'affiche mais sans produits                                                                    | L'API n'est pas lancée (terminal 1), ou l'étape 3.3 (`migrate deploy` puis `npm run seed`) n'a pas été faite.                                                                                                              |
+| `Port 3000 / 4200 is already in use`                                                                    | Un autre programme utilise ce port : le fermer. Sinon, changer de port : `PORT=3001` dans `backend/.env` et `"target": "http://localhost:3001"` dans `frontend/proxy.conf.json` ; `npm start -- --port 4300` pour le site. |
+| « Trop de tentatives » à la connexion                                                                   | Protection contre le forçage (10 essais par 15 minutes) : patienter, ou arrêter puis relancer l'API.                                                                                                                       |
 
 ---
 
