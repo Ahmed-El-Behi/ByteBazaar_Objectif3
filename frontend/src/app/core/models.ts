@@ -1,0 +1,94 @@
+import { environment } from '../../environments/environment';
+
+export const API_URL = environment.apiUrl;
+export const SHIPPING_FEE = 7; // TND, doit rester identique à order.service.ts côté backend
+
+export interface Brand {
+  id: number;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+}
+
+export interface Category {
+  id: number;
+  slug: string;
+  nameFr: string;
+  nameEn: string;
+}
+
+export interface CategoryNode extends Category {
+  _count: { products: number };
+  children: (Category & { _count: { products: number } })[];
+}
+
+export interface ProductListItem {
+  id: number;
+  sku: string;
+  slug: string;
+  name: string;
+  price: number;
+  stockQuantity: number;
+  isAvailable: boolean;
+  brand: { name: string; slug: string };
+  category: { slug: string; nameFr: string; nameEn: string };
+  image: { url: string; altText: string | null } | null;
+}
+
+export interface Paginated<T> {
+  data: T[];
+  meta: { page: number; limit: number; total: number; totalPages: number };
+}
+
+export interface ProductSpec {
+  id: number;
+  name: string;
+  valueText: string;
+  valueNumber: number | null;
+  unit: string | null;
+}
+
+export interface ProductDetail {
+  id: number;
+  sku: string;
+  slug: string;
+  name: string;
+  descriptionFr: string;
+  descriptionEn: string;
+  price: number;
+  stockQuantity: number;
+  isAvailable: boolean;
+  brand: { name: string; slug: string; logoUrl: string | null };
+  category: { slug: string; nameFr: string; nameEn: string };
+  images: {
+    id: number;
+    url: string;
+    altText: string | null;
+    position: number;
+    isPrimary: boolean;
+  }[];
+  specs: ProductSpec[];
+}
+
+export interface AuthUser {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  language: 'FR' | 'EN';
+  createdAt: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  user: AuthUser;
+}
+
+export interface RegisterInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  password: string;
+}

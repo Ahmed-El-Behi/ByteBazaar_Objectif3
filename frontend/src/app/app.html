@@ -1,0 +1,194 @@
+<app-ambient />
+<app-cursor />
+<app-toaster />
+
+<header class="topbar" [class.scrolled]="scrolled()">
+  <div class="container topbar-inner">
+    <a routerLink="/" class="logo">
+      <span class="logo-mark">BB</span>
+      <span>Byte<b>Bazaar</b></span>
+    </a>
+
+    <nav class="nav-links" #nav>
+      <!-- Pastille lumineuse unique qui glisse d'une page à l'autre (voir App.moveIndicator) -->
+      <span class="nav-indicator" aria-hidden="true"></span>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">{{
+        'Accueil' | t
+      }}</a>
+      <a routerLink="/produits" routerLinkActive="active">{{ 'Catalogue' | t }}</a>
+      <a routerLink="/configurateur" routerLinkActive="active">{{ 'Configurateur' | t }}</a>
+      <a routerLink="/a-propos" routerLinkActive="active">{{ 'À propos' | t }}</a>
+      <a routerLink="/contact" routerLinkActive="active">{{ 'Contact' | t }}</a>
+    </nav>
+
+    <div class="user-actions">
+      <form class="search" [class.open]="searchOpen()" (submit)="search($event, q.value)">
+        <input
+          #q
+          type="search"
+          [placeholder]="'Rechercher un produit…' | t"
+          [attr.aria-label]="'Rechercher' | t"
+          [tabindex]="searchOpen() ? 0 : -1"
+          (blur)="onSearchBlur(q)"
+          (keydown.escape)="closeSearch(q)"
+        />
+        <button
+          class="search-btn"
+          type="button"
+          [attr.aria-label]="'Rechercher' | t"
+          [title]="'Rechercher' | t"
+          (mousedown)="$event.preventDefault()"
+          (click)="toggleSearch(q)"
+        >
+          <app-icon name="search" [size]="19" />
+        </button>
+      </form>
+
+      <button
+        class="lang-switch"
+        type="button"
+        (click)="i18n.toggle()"
+        [attr.aria-label]="i18n.lang() === 'fr' ? 'Switch to English' : 'Passer en français'"
+        [title]="i18n.lang() === 'fr' ? 'Switch to English' : 'Passer en français'"
+      >
+        <app-icon name="languages" [size]="17" />
+        <span class="lang-code">{{ i18n.lang() === 'fr' ? 'FR' : 'EN' }}</span>
+      </button>
+
+      <button
+        class="theme-switch"
+        type="button"
+        role="switch"
+        [attr.aria-checked]="theme.theme() === 'dark'"
+        [attr.aria-label]="'Mode sombre' | t"
+        [title]="(theme.theme() === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre') | t"
+        (click)="theme.toggle()"
+      >
+        <span class="slot">
+          <app-icon name="sun" [size]="16" [stroke]="2" />
+        </span>
+        <span class="slot">
+          <app-icon name="moon" [size]="16" [stroke]="2" />
+        </span>
+        <span class="knob"></span>
+      </button>
+
+      <a
+        routerLink="/panier"
+        class="cart-btn"
+        [title]="'Voir mon panier' | t"
+        [attr.aria-label]="'Voir mon panier' | t"
+      >
+        <app-icon name="cart" [size]="19" />
+        @if (cartState.itemCount() > 0) {
+          <span class="cart-badge" [class.bump]="cartBump()" (animationend)="cartBump.set(false)">{{
+            cartState.itemCount()
+          }}</span>
+        }
+      </a>
+
+      @if (auth.isLoggedIn()) {
+        <a
+          routerLink="/compte"
+          class="avatar"
+          [title]="('Mon compte' | t) + (auth.user() ? ' (' + auth.user()!.firstName + ')' : '')"
+          [attr.aria-label]="'Mon compte' | t"
+        >
+          <app-icon name="userCircle" [size]="20" />
+        </a>
+
+        <button
+          class="logout"
+          type="button"
+          (click)="auth.logout(); cartState.clearLocal()"
+          [attr.aria-label]="'Se déconnecter' | t"
+          [title]="'Se déconnecter' | t"
+        >
+          <app-icon name="logout" [size]="18" />
+        </button>
+      } @else {
+        <a
+          routerLink="/connexion"
+          class="avatar login-icon"
+          [title]="'Connexion' | t"
+          [attr.aria-label]="'Connexion' | t"
+        >
+          <app-icon name="userCircle" [size]="20" />
+        </a>
+        <a routerLink="/connexion" class="btn-sm">{{ 'Connexion' | t }}</a>
+        <a routerLink="/inscription" class="btn-sm primary">{{ 'Inscription' | t }}</a>
+      }
+    </div>
+  </div>
+</header>
+
+<main>
+  <router-outlet />
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a routerLink="/" class="logo">
+          <span class="logo-mark">BB</span>
+          <span>Byte<b>Bazaar</b></span>
+        </a>
+        <p class="footer-desc">
+          {{
+            'Le bazar des composants PC en Tunisie. Multi-marques, prix clairs en TND, assemblages compatibles.'
+              | t
+          }}
+        </p>
+        <a class="footer-contact" href="mailto:contact@ByteBazaar.tn">
+          <app-icon name="mail" [size]="17" />
+          contact@ByteBazaar.tn
+        </a>
+        <span class="footer-place">
+          <app-icon name="mapPin" [size]="17" />
+          {{ 'Tunis, Tunisie' | t }}
+        </span>
+      </div>
+
+      <div class="footer-col">
+        <h4>{{ 'Boutique' | t }}</h4>
+        <a routerLink="/produits">{{ 'Catalogue' | t }}</a>
+        <a routerLink="/a-propos">{{ 'À propos' | t }}</a>
+        <a routerLink="/configurateur">{{ 'Configurateur PC' | t }}</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>{{ 'Aide' | t }}</h4>
+        <a routerLink="/contact">{{ 'Contact & support' | t }}</a>
+        <a routerLink="/contact">{{ 'Livraison' | t }}</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>{{ 'Mon espace' | t }}</h4>
+        @if (auth.isLoggedIn()) {
+          <a routerLink="/compte">{{ 'Mon compte' | t }}</a>
+        } @else {
+          <a routerLink="/connexion">{{ 'Connexion / Inscription' | t }}</a>
+        }
+        <a routerLink="/compte/commandes">{{ 'Mes commandes' | t }}</a>
+        <a routerLink="/compte/configurations">{{ 'Mes configurations' | t }}</a>
+        <a routerLink="/panier">{{ 'Panier' | t }}</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>{{ '© 2026 ByteBazaar · Tous droits réservés · Prix en TND' | t }}</span>
+      <div class="footer-pay">
+        <span class="pay-label">{{ 'Paiement :' | t }}</span>
+        <span class="pay-chip">{{ 'À la livraison' | t }}</span>
+        <span class="pay-chip">PayPal</span>
+        <span class="pay-chip">{{ 'Virement' | t }}</span>
+        <span class="pay-chip">{{ 'Carte' | t }}</span>
+      </div>
+      <span class="footer-legal">
+        <a routerLink="/conditions">{{ 'Conditions' | t }}</a> ·
+        <a routerLink="/confidentialite">{{ 'Confidentialité' | t }}</a>
+      </span>
+    </div>
+  </div>
+</footer>
